@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity
 
     private AppBarConfiguration mAppBarConfiguration;
     private static final int REQUEST_IMAGE_CAPTURE = 101;
-    private ImageView imageView;
+    private ImageView imageView2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -169,7 +169,8 @@ public class MainActivity extends AppCompatActivity
         {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
-            imageView.setImageBitmap(imageBitmap);
+            imageView2 = findViewById(R.id.imageView2);
+            imageView2.setImageBitmap(imageBitmap);
         }
 
 
