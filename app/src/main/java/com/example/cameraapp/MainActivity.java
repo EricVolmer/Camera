@@ -5,19 +5,16 @@ import android.app.ActivityManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.MenuItem;
 import android.view.View;
 
-import androidx.core.content.FileProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -33,11 +30,6 @@ import androidx.appcompat.widget.Toolbar;
 import android.view.Menu;
 import android.widget.ImageView;
 import android.widget.Toast;
-
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class MainActivity extends AppCompatActivity
 {
@@ -137,7 +129,6 @@ public class MainActivity extends AppCompatActivity
         // if it is true then it will ask permission
         {
             requestPermissions(PERMISSIONS, REQUEST_PERMISSIONS);
-            return;
         }
 
     }
@@ -172,7 +163,5 @@ public class MainActivity extends AppCompatActivity
             imageView2 = findViewById(R.id.imageView2);
             imageView2.setImageBitmap(imageBitmap);
         }
-
-
     }
 }
