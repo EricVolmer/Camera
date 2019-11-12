@@ -48,6 +48,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageV
     {
         return images.length;
     }
+
     public static class ImageViewHolder extends RecyclerView.ViewHolder
     {
         ImageView Album;
@@ -60,7 +61,6 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageV
 
             Album = itemView.findViewById(R.id.album);
             AlbumTitle = itemView.findViewById(R.id.album_title);
-
 
 
         }
