@@ -15,9 +15,15 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageV
 {
 
     private int[] images;
-    public RecyclerAdapter(int [] images)
+
+    public RecyclerAdapter(int[] images)
     {
         this.images = images;
+    }
+
+    public RecyclerAdapter()
+    {
+
     }
 
     @NonNull

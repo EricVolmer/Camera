@@ -44,6 +44,8 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView.LayoutManager layoutManager;
     private RecyclerAdapter adapter;
 
+    private int[] images;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -77,8 +79,8 @@ public class MainActivity extends AppCompatActivity
         layoutManager = new GridLayoutManager(this, 2);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(layoutManager);
-        adapter = new RecyclerAdapter();
-
+        adapter = new RecyclerAdapter(images);
+        recyclerView.setAdapter(adapter);
 
 
     }
