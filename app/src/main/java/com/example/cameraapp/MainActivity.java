@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 
-import com.example.cameraapp.ui.RecyclerAdapter;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -22,6 +21,8 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -43,8 +44,9 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView recyclerView;
     private RecyclerView.LayoutManager layoutManager;
     private RecyclerAdapter adapter;
+    private StorageReference mStorageRef;
 
-    private int[] images;
+    private int[] images = {R.drawable.pic1, R.drawable.pic2};
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -77,13 +79,14 @@ public class MainActivity extends AppCompatActivity
 
         recyclerView = findViewById(R.id.imageGallery);
         layoutManager = new GridLayoutManager(this, 2);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(layoutManager);
+       // recyclerView.setHasFixedSize(true);
+     //   recyclerView.setLayoutManager(layoutManager);
         adapter = new RecyclerAdapter(images);
-        recyclerView.setAdapter(adapter);
-
+    //    recyclerView.setAdapter(adapter);
+        mStorageRef = FirebaseStorage.getInstance().getReference();
 
     }
+
 
     private void displayMessage(String message)
     {
@@ -164,15 +167,14 @@ public class MainActivity extends AppCompatActivity
 
         if (imageTakenIntent.resolveActivity(getPackageManager()) != null)
         {
-
             startActivityForResult(imageTakenIntent, REQUEST_IMAGE_CAPTURE);
-
         }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
+        super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK)
         {
             Bundle extras = data.getExtras();

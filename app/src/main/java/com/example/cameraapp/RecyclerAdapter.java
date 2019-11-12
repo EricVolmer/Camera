@@ -1,4 +1,4 @@
-package com.example.cameraapp.ui;
+package com.example.cameraapp;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,8 +9,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.cameraapp.R;
-
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageViewHolder>
 {
 
@@ -19,11 +17,6 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageV
     public RecyclerAdapter(int[] images)
     {
         this.images = images;
-    }
-
-    public RecyclerAdapter()
-    {
-
     }
 
     @NonNull
