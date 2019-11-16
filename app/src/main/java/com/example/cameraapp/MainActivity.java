@@ -5,12 +5,15 @@ import android.app.ActivityManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.icu.util.Output;
 import android.os.Build;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,8 +35,15 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.Menu;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 public class MainActivity extends AppCompatActivity
 {
@@ -45,6 +55,10 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView.LayoutManager layoutManager;
     private RecyclerAdapter adapter;
     private StorageReference mStorageRef;
+
+    Button btSave;
+    OutputStream outputStream;
+
 
     private int[] images = {R.drawable.pic1, R.drawable.pic2};
 
@@ -84,6 +98,50 @@ public class MainActivity extends AppCompatActivity
         adapter = new RecyclerAdapter(images);
     //    recyclerView.setAdapter(adapter);
         mStorageRef = FirebaseStorage.getInstance().getReference();
+
+        btSave = findViewById(R.id.bt_save);
+
+
+        btSave.setOnClickListener(new View.OnClickListener()
+        {
+         @Override
+         public void onClick(View v)
+         {
+             BitmapDrawable drawable = (BitmapDrawable) imageView2.getDrawable();
+             Bitmap bitmap = drawable.getBitmap();
+
+             File filepath = Environment.getExternalStorageDirectory();
+             File dir = new File(filepath.getAbsolutePath()+ "/Testing/");
+             dir.mkdir();
+             File file = new File(dir, System.currentTimeMillis()+ "jpg");
+             try
+             {
+                 outputStream = new FileOutputStream(file);
+             }
+             catch (FileNotFoundException e)
+             {
+                 e.printStackTrace();
+             }
+             bitmap.compress(Bitmap.CompressFormat.JPEG,100, outputStream);
+             Toast.makeText(getApplicationContext(), "Save Image",Toast.LENGTH_SHORT).show();
+
+             try
+             {
+                 outputStream.flush();
+             } catch (IOException e)
+             {
+                 e.printStackTrace();
+             }
+             try
+             {
+                 outputStream.close();
+             } catch (IOException e)
+             {
+                 e.printStackTrace();
+             }
+         }
+        }
+        );
 
     }
 
