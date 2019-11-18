@@ -5,12 +5,14 @@ import android.app.ActivityManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.MenuItem;
 import android.view.View;
@@ -90,7 +92,7 @@ public class MainActivity extends AppCompatActivity
         btSave = findViewById(R.id.bt_save);
 
 
-/*        btSave.setOnClickListener(new View.OnClickListener()
+        btSave.setOnClickListener(new View.OnClickListener()
         {
          @Override
          public void onClick(View v)
@@ -130,7 +132,7 @@ public class MainActivity extends AppCompatActivity
          }
         }
         );
-*/
+
     }
 
 
