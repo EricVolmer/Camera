@@ -1,5 +1,6 @@
 package com.example.cameraapp;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,15 +10,27 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.example.cameraapp.ui.gallery.GalleryFragment;
+
+import java.util.ArrayList;
+
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageViewHolder>
 {
 
-    private int[] images;
+    //  private int[] images;
 
-    RecyclerAdapter(int[] images)
+    private ArrayList<String> urls;
+    GalleryFragment context;
+
+
+    public RecyclerAdapter(ArrayList<String> imgUrl, GalleryFragment context)
     {
-        this.images = images;
+        this.urls = imgUrl;
+        this.context = context;
     }
+
 
     @NonNull
     @Override
@@ -30,18 +43,19 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageV
     @Override
     public void onBindViewHolder(ImageViewHolder holder, int position)
     {
-        int image_id = images[position];
-        holder.Album.setImageResource(image_id);
-        holder.AlbumTitle.setText("Image :" + position);
+        Glide.with(this.context)
+                .load(urls.get(position))
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(holder.getImage());
     }
 
     @Override
     public int getItemCount()
     {
-        return images.length;
+        return urls.size();
     }
 
-    static class ImageViewHolder extends RecyclerView.ViewHolder
+    public static class ImageViewHolder extends RecyclerView.ViewHolder
     {
         ImageView Album;
         TextView AlbumTitle;
@@ -55,6 +69,11 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageV
             AlbumTitle = itemView.findViewById(R.id.album_title);
 
 
+        }
+
+        public ImageView getImage()
+        {
+            return this.Album;
         }
     }
 }

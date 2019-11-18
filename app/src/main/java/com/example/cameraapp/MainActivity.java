@@ -5,14 +5,12 @@ import android.app.ActivityManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,8 +29,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+
 
 import android.view.Menu;
 import android.widget.Button;
@@ -52,15 +49,11 @@ public class MainActivity extends AppCompatActivity
     private AppBarConfiguration mAppBarConfiguration;
     private static final int REQUEST_IMAGE_CAPTURE = 101;
     private ImageView imageView2;
-    private RecyclerView.LayoutManager layoutManager;
-    private RecyclerAdapter adapter;
     private StorageReference mStorageRef;
 
     Button btSave;
     OutputStream outputStream;
 
-
-    private int[] images = {R.drawable.pic1, R.drawable.pic2};
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -91,18 +84,13 @@ public class MainActivity extends AppCompatActivity
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
 
-        RecyclerView recyclerView = findViewById(R.id.imageGallery);
-        layoutManager = new GridLayoutManager(this, 2);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(layoutManager);
-        adapter = new RecyclerAdapter(images);
-        recyclerView.setAdapter(adapter);
+
         mStorageRef = FirebaseStorage.getInstance().getReference();
 
         btSave = findViewById(R.id.bt_save);
 
 
-        btSave.setOnClickListener(new View.OnClickListener()
+/*        btSave.setOnClickListener(new View.OnClickListener()
         {
          @Override
          public void onClick(View v)
@@ -142,7 +130,7 @@ public class MainActivity extends AppCompatActivity
          }
         }
         );
-
+*/
     }
 
 
