@@ -14,4 +14,9 @@
     <string name="menu_share">Share</string>
     <string name="menu_send">Send</string>
     <string name="camera">Camera</string>
+    <string name="save">save</string>
+    <string name="displaycamerapicture">DisplayCameraPicture</string>
+    <string name="image">image</string>
+    <string name="existingimage">ExistingImage</string>
+    <string name="communicate">Communicate</string>
 </resources>

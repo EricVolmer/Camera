@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.icu.util.Output;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -18,6 +17,7 @@ import android.provider.MediaStore;
 import android.view.MenuItem;
 import android.view.View;
 
+import androidx.annotation.NonNull;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -44,6 +44,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity
 {
@@ -51,7 +52,6 @@ public class MainActivity extends AppCompatActivity
     private AppBarConfiguration mAppBarConfiguration;
     private static final int REQUEST_IMAGE_CAPTURE = 101;
     private ImageView imageView2;
-    private RecyclerView recyclerView;
     private RecyclerView.LayoutManager layoutManager;
     private RecyclerAdapter adapter;
     private StorageReference mStorageRef;
@@ -91,12 +91,12 @@ public class MainActivity extends AppCompatActivity
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
 
-        recyclerView = findViewById(R.id.imageGallery);
+        RecyclerView recyclerView = findViewById(R.id.imageGallery);
         layoutManager = new GridLayoutManager(this, 2);
-       // recyclerView.setHasFixedSize(true);
-     //   recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(layoutManager);
         adapter = new RecyclerAdapter(images);
-    //    recyclerView.setAdapter(adapter);
+        recyclerView.setAdapter(adapter);
         mStorageRef = FirebaseStorage.getInstance().getReference();
 
         btSave = findViewById(R.id.bt_save);
@@ -181,15 +181,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                                           int[] grantResults)
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults)
     {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_PERMISSIONS && grantResults.length > 0)
         {
             if (arePermissionsDenied())
             {
-                ((ActivityManager) (this.getSystemService(ACTIVITY_SERVICE))).clearApplicationUserData();
+                ((ActivityManager) (Objects.requireNonNull(this.getSystemService(ACTIVITY_SERVICE)))).clearApplicationUserData();
                 recreate();
             } else
             {
@@ -236,6 +236,7 @@ public class MainActivity extends AppCompatActivity
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK)
         {
             Bundle extras = data.getExtras();
+            assert extras != null;
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             imageView2 = findViewById(R.id.imageView2);
             imageView2.setImageBitmap(imageBitmap);

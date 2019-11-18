@@ -11,15 +11,16 @@
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:scaleType="fitXY"
-        android:id="@+id/album"/>
+        android:id="@+id/album"
+        android:contentDescription="@string/existingimage" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="image"
+        android:text="@string/image"
         android:padding="10dp"
         android:layout_gravity="center"
-        android:textSize="18dp"
+        android:textSize="18sp"
         android:id="@+id/album_title"/>
 
 </LinearLayout>

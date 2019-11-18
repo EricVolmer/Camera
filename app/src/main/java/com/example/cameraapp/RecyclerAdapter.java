@@ -14,7 +14,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageV
 
     private int[] images;
 
-    public RecyclerAdapter(int[] images)
+    RecyclerAdapter(int[] images)
     {
         this.images = images;
     }
@@ -42,12 +42,12 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageV
         return images.length;
     }
 
-    public static class ImageViewHolder extends RecyclerView.ViewHolder
+    static class ImageViewHolder extends RecyclerView.ViewHolder
     {
         ImageView Album;
         TextView AlbumTitle;
 
-        public ImageViewHolder(View itemView)
+        ImageViewHolder(View itemView)
         {
             super(itemView);
 

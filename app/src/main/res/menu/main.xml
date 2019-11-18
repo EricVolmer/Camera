@@ -5,7 +5,7 @@
         android:id="@+id/picture"
         android:icon="@android:drawable/ic_menu_camera"
         android:onClick="takePicture"
-        android:title="camera"
+        android:title="@string/camera"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_settings"
