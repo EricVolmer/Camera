@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -18,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.FileProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -51,7 +53,7 @@ public class MainActivity extends AppCompatActivity
 {
 
     private AppBarConfiguration mAppBarConfiguration;
-    private static final int REQUEST_IMAGE_CAPTURE = 101;
+    private static final int REQUEST_IMAGE_CAPTURE = 1;
     private ImageView imageView2;
     private StorageReference mStorageRef;
 
@@ -91,8 +93,9 @@ public class MainActivity extends AppCompatActivity
 
         mStorageRef = FirebaseStorage.getInstance().getReference();
 
-        btSave = findViewById(R.id.bt_save);
 
+        /*
+        btSave = findViewById(R.id.bt_save);
 
         btSave.setOnClickListener(new View.OnClickListener()
         {
@@ -130,17 +133,16 @@ public class MainActivity extends AppCompatActivity
              } catch (IOException e)
              {
                  e.printStackTrace();
-             }
+
+            }
          }
+
+
         }
         );
 
-    }
+         */
 
-
-    private void displayMessage(String message)
-    {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -217,7 +219,25 @@ public class MainActivity extends AppCompatActivity
 
         if (imageTakenIntent.resolveActivity(getPackageManager()) != null)
         {
-            startActivityForResult(imageTakenIntent, REQUEST_IMAGE_CAPTURE);
+            File imageFile = null;
+
+            try
+            {
+                imageFile = getImageFile();
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+            if (imageFile != null)
+            {
+                Uri imageUri = FileProvider.getUriForFile(this, "com.example.cameraapp.fileprovider", imageFile);
+                imageTakenIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+
+                startActivityForResult(imageTakenIntent, REQUEST_IMAGE_CAPTURE);
+
+            }
+
+
         }
     }
 
@@ -227,16 +247,15 @@ public class MainActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK)
         {
-            Bundle extras = data.getExtras();
+            Bundle extras = getIntent().getExtras();
             assert extras != null;
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            imageView2 = findViewById(R.id.imageView2);
-            imageView2.setImageBitmap(imageBitmap);
         }
     }
-    String currentPhotoPath;
 
-    private File createImageFile() throws IOException {
+    String currentPhotoPath = null;
+
+    private File getImageFile() throws IOException
+    {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
@@ -250,5 +269,12 @@ public class MainActivity extends AppCompatActivity
         // Save a file: path for use with ACTION_VIEW intents
         currentPhotoPath = image.getAbsolutePath();
         return image;
+    }
+
+    public void displayImage(View view)
+    {
+        Intent intent = new Intent(this, DisplayImage.class);
+        intent.putExtra("image_path",currentPhotoPath);
+        startActivity(intent);
     }
 }
