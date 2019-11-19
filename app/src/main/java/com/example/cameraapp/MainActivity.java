@@ -43,6 +43,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity
@@ -112,7 +114,7 @@ public class MainActivity extends AppCompatActivity
              {
                  e.printStackTrace();
              }
-             bitmap.compress(Bitmap.CompressFormat.JPEG,100, outputStream);
+           //  bitmap.compress(Bitmap.CompressFormat.JPEG,100, outputStream);
              Toast.makeText(getApplicationContext(), "Save Image",Toast.LENGTH_SHORT).show();
 
              try
@@ -231,5 +233,22 @@ public class MainActivity extends AppCompatActivity
             imageView2 = findViewById(R.id.imageView2);
             imageView2.setImageBitmap(imageBitmap);
         }
+    }
+    String currentPhotoPath;
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        currentPhotoPath = image.getAbsolutePath();
+        return image;
     }
 }
