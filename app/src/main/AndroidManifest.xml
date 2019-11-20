@@ -29,8 +29,10 @@
 
             </intent-filter>
         </activity>
-        <activity android:name=".DisplayImage"
-            android:label="@string/app_name"/>
+        <activity
+            android:name=".DisplayImage"
+            android:label="@string/app_name"
+            />
         <activity
             android:name="com.example.cameraapp.ui.gallery.GalleryFragment"
             android:label="@string/app_name"/>

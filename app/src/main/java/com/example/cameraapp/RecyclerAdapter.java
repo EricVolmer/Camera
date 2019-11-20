@@ -25,6 +25,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageV
     GalleryFragment context;
 
 
+
     public RecyclerAdapter(ArrayList<String> imgUrl, GalleryFragment context)
     {
         this.urls = imgUrl;

@@ -27,6 +27,7 @@ public class GalleryFragment extends Fragment
     private RecyclerAdapter adapter;
     private ArrayList<String> ImgUrl = new ArrayList<>();
 
+
     private int[] images = {R.drawable.pic1};
 
     public View onCreateView(@NonNull LayoutInflater inflater,
