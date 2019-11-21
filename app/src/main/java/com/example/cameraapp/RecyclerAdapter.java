@@ -1,6 +1,5 @@
 package com.example.cameraapp;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,10 +18,8 @@ import java.util.ArrayList;
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageViewHolder>
 {
 
-    //  private int[] images;
-
     private ArrayList<String> urls;
-    GalleryFragment context;
+    private GalleryFragment context;
 
 
 
@@ -56,7 +53,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageV
         return urls.size();
     }
 
-    public static class ImageViewHolder extends RecyclerView.ViewHolder
+    static class ImageViewHolder extends RecyclerView.ViewHolder
     {
         ImageView Album;
         TextView AlbumTitle;
@@ -72,7 +69,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageV
 
         }
 
-        public ImageView getImage()
+        ImageView getImage()
         {
             return this.Album;
         }

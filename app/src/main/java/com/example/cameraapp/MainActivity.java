@@ -4,8 +4,6 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -36,15 +34,10 @@ import androidx.appcompat.widget.Toolbar;
 
 
 import android.view.Menu;
-import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
@@ -56,10 +49,6 @@ public class MainActivity extends AppCompatActivity
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private ImageView imageView2;
     private StorageReference mStorageRef;
-
-    Button btSave;
-    OutputStream outputStream;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -93,55 +82,6 @@ public class MainActivity extends AppCompatActivity
 
         mStorageRef = FirebaseStorage.getInstance().getReference();
 
-
-        /*
-        btSave = findViewById(R.id.bt_save);
-
-        btSave.setOnClickListener(new View.OnClickListener()
-        {
-         @Override
-         public void onClick(View v)
-         {
-             BitmapDrawable drawable = (BitmapDrawable) imageView2.getDrawable();
-             Bitmap bitmap = drawable.getBitmap();
-
-             File filepath = Environment.getExternalStorageDirectory();
-             File dir = new File(filepath.getAbsolutePath()+ "/Testing/");
-             dir.mkdir();
-             File file = new File(dir, System.currentTimeMillis()+ "jpg");
-             try
-             {
-                 outputStream = new FileOutputStream(file);
-             }
-             catch (FileNotFoundException e)
-             {
-                 e.printStackTrace();
-             }
-           //  bitmap.compress(Bitmap.CompressFormat.JPEG,100, outputStream);
-             Toast.makeText(getApplicationContext(), "Save Image",Toast.LENGTH_SHORT).show();
-
-             try
-             {
-                 outputStream.flush();
-             } catch (IOException e)
-             {
-                 e.printStackTrace();
-             }
-             try
-             {
-                 outputStream.close();
-             } catch (IOException e)
-             {
-                 e.printStackTrace();
-
-            }
-         }
-
-
-        }
-        );
-
-         */
 
     }
 
@@ -274,7 +214,7 @@ public class MainActivity extends AppCompatActivity
     public void displayImage(View view)
     {
         Intent intent = new Intent(this, DisplayImage.class);
-        intent.putExtra("image_path",currentPhotoPath);
+        intent.putExtra("image_path", currentPhotoPath);
         startActivity(intent);
     }
 }
