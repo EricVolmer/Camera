@@ -23,5 +23,8 @@ public class DisplayImage extends AppCompatActivity
         Bitmap bitmap = BitmapFactory.decodeFile((getIntent().getStringExtra("image_path")));
         imageView.setImageBitmap(bitmap);
 
+
+        
+
     }
 }

@@ -2,17 +2,27 @@ package com.example.cameraapp;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
+import com.bumptech.glide.Glide;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -24,6 +34,11 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -34,7 +49,10 @@ import androidx.appcompat.widget.Toolbar;
 
 
 import android.view.Menu;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,6 +67,23 @@ public class MainActivity extends AppCompatActivity
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private ImageView imageView2;
     private StorageReference mStorageRef;
+    private static final String TAG = "MainActivity";
+    private ProgressDialog pDialog;
+    private static final int RC_SIGN_IN = 9001;
+
+
+    // Firebase Auth Object.
+    public FirebaseAuth firebaseAuth;
+
+    // Google API Client object.
+    public GoogleSignInClient GoogleSignInClient;
+
+    // Sing out button.
+    Button SignOutButton;
+
+    // Google Sign In button .
+    com.google.android.gms.common.SignInButton signInButton;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -82,8 +117,46 @@ public class MainActivity extends AppCompatActivity
 
         mStorageRef = FirebaseStorage.getInstance().getReference();
 
+        pDialog = new ProgressDialog(MainActivity.this);
+
+        signInButton = findViewById(R.id.sign_in_button);
+
+        SignOutButton = findViewById(R.id.logout);
+
+        // Getting Firebase Auth Instance into firebaseAuth object.
+        firebaseAuth = FirebaseAuth.getInstance();
+
+
+        // Creating and Configuring Google Sign In object.
+        // Configure Google Sign In
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        GoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
 
     }
+
+    public void logOut(MenuItem item)
+    {
+        UserSignOutFunction();
+    }
+
+    public void logIn(MenuItem item)
+    {
+        UserSignInMethod();
+    }
+
+    public void UserSignInMethod()
+    {
+
+        // Passing Google Api Client into Intent.
+        Intent signInIntent = GoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
@@ -176,8 +249,6 @@ public class MainActivity extends AppCompatActivity
                 startActivityForResult(imageTakenIntent, REQUEST_IMAGE_CAPTURE);
 
             }
-
-
         }
     }
 
@@ -185,11 +256,125 @@ public class MainActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
         super.onActivityResult(requestCode, resultCode, data);
+
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK)
         {
             Bundle extras = getIntent().getExtras();
             assert extras != null;
         }
+        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN)
+        {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try
+            {
+                // Google Sign In was successful, authenticate with Firebase
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+                firebaseAuthWithGoogle(account);
+            } catch (ApiException e)
+            {
+                // Google Sign In failed, update UI appropriately
+                Log.w(TAG, "Google sign in failed", e);
+                // ...
+            }
+        }
+    }
+
+    private void displayProgressDialog()
+    {
+        pDialog.setMessage("Logging In.. Please wait...");
+        pDialog.setIndeterminate(false);
+        pDialog.setCancelable(false);
+        pDialog.show();
+
+    }
+
+    public void firebaseAuthWithGoogle(final GoogleSignInAccount acct)
+    {
+        displayProgressDialog();
+        Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
+
+        final AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+        firebaseAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>()
+                {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task)
+                    {
+                        if (task.isSuccessful())
+                        {
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d(TAG, "signInWithCredential:success");
+                            Toast.makeText(getApplicationContext(), "Welcome back: " + acct.getDisplayName(), Toast.LENGTH_SHORT).show();
+
+                            FirebaseUser user = firebaseAuth.getCurrentUser();
+                            updateUI(user);
+                        } else
+                        {
+                            // If sign in fails, display a message to the user.
+                            Log.w(TAG, "signInWithCredential:failure", task.getException());
+                            Toast.makeText(getApplicationContext(), "Login Failed: ", Toast.LENGTH_SHORT).show();
+                        }
+
+                        hideProgressDialog();
+                    }
+
+                });
+    }
+
+    private void updateUI(FirebaseUser user)
+    {
+        hideProgressDialog();
+
+        TextView displayName = findViewById(R.id.userName);
+        ImageView profileImage = findViewById(R.id.imageView);
+        TextView displayEmail = findViewById(R.id.email);
+
+        if (user != null)
+        {
+            displayName.setText(user.getDisplayName());
+            displayName.setVisibility(View.VISIBLE);
+            displayEmail.setText(user.getEmail());
+            displayEmail.setVisibility(View.VISIBLE);
+            // Loading profile image
+            Uri profilePicUrl = user.getPhotoUrl();
+            if (profilePicUrl != null)
+            {
+                Glide.with(this).load(profilePicUrl)
+                        .into(profileImage);
+            }
+            profileImage.setVisibility(View.VISIBLE);
+
+        } else
+        {
+            displayName.setVisibility(View.GONE);
+            profileImage.setVisibility(View.GONE);
+            displayEmail.setVisibility(View.GONE);
+        }
+    }
+
+    private void hideProgressDialog()
+    {
+        pDialog.dismiss();
+    }
+
+
+    public void UserSignOutFunction()
+    {
+        // Firebase sign out
+        firebaseAuth.signOut();
+
+        // Google sign out
+        GoogleSignInClient.signOut().addOnCompleteListener(this,
+                new OnCompleteListener<Void>()
+                {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task)
+                    {
+                        Toast.makeText(getApplicationContext(), "Logged out ", Toast.LENGTH_SHORT).show();
+                        updateUI(null);
+                    }
+                });
     }
 
     String currentPhotoPath = null;
@@ -199,6 +384,7 @@ public class MainActivity extends AppCompatActivity
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
+
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File image = File.createTempFile(
                 imageFileName,  /* prefix */
@@ -211,10 +397,13 @@ public class MainActivity extends AppCompatActivity
         return image;
     }
 
+
     public void displayImage(View view)
     {
         Intent intent = new Intent(this, DisplayImage.class);
         intent.putExtra("image_path", currentPhotoPath);
         startActivity(intent);
     }
+
+
 }

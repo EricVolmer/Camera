@@ -1,5 +1,6 @@
 package com.example.cameraapp;
 
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.cameraapp.ui.gallery.GalleryFragment;
 
+import java.io.File;
 import java.util.ArrayList;
 
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageViewHolder>
@@ -20,13 +22,14 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageV
 
     private ArrayList<String> urls;
     private GalleryFragment context;
+    private Uri uri;
 
 
-
-    public RecyclerAdapter(ArrayList<String> imgUrl, GalleryFragment context)
+    public RecyclerAdapter(ArrayList<String> imgUrl, GalleryFragment context, Uri uri)
     {
         this.urls = imgUrl;
         this.context = context;
+        this.uri = uri;
     }
 
 
@@ -35,16 +38,20 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageV
     public ImageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
     {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.gallery_layout, parent, false);
-        return new ImageViewHolder(view);
+        ImageViewHolder imageViewHolder = new ImageViewHolder(view);
+        return imageViewHolder;
     }
 
     @Override
     public void onBindViewHolder(ImageViewHolder holder, int position)
     {
-        Glide.with(this.context)
-                .load(urls.get(position))
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .into(holder.getImage());
+        Uri uri = Uri.fromFile(new File("com.example.cameraapp.fileprovider"));
+
+        Glide.with(context).load(urls.get((position))).into(holder.getImage());
+
+        //  Glide.with(this.context).load(urls.get(position)).into(holder.getImage());
+
+
     }
 
     @Override
