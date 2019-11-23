@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity
 
     // Google Sign In button .
     com.google.android.gms.common.SignInButton signInButton;
+    private boolean uriToImage;
 
 
     @Override
@@ -107,7 +108,7 @@ public class MainActivity extends AppCompatActivity
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_gallery)
+                R.id.nav_home, R.id.nav_gallery, R.id.nav_share)
                 .setDrawerLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
@@ -406,4 +407,12 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    public void share(MenuItem item)
+    {
+        Intent sharingIntent = new Intent(Intent.ACTION_SEND);
+        sharingIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        sharingIntent.setType("image/*");
+        sharingIntent.putExtra(Intent.EXTRA_STREAM, currentPhotoPath);
+        startActivity(Intent.createChooser(sharingIntent, "Share Image Using"));
+    }
 }

@@ -19,4 +19,5 @@
     <string name="image">image</string>
     <string name="existingimage">ExistingImage</string>
     <string name="communicate">Communicate</string>
+    <string name="send_to">sendTo</string>
 </resources>
