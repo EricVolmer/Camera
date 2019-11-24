@@ -1,10 +1,12 @@
 package com.example.cameraapp;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,6 +18,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -40,7 +44,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -59,17 +65,27 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity
 {
 
     private AppBarConfiguration mAppBarConfiguration;
     private static final int REQUEST_IMAGE_CAPTURE = 1;
-    private ImageView imageView2;
+    private ImageView imageView23;
     private StorageReference mStorageRef;
     private static final String TAG = "MainActivity";
     private ProgressDialog pDialog;
     private static final int RC_SIGN_IN = 9001;
+    FirebaseStorage storage;
+    StorageReference storageReference;
+
+    private Button btnChoose, btnUpload;
+    ImageView imageView;
+
+    private Uri filePath;
+
+    private final int PICK_IMAGE_REQUEST = 71;
 
 
     // Firebase Auth Object.
@@ -99,8 +115,10 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view)
             {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Intent sharingIntent = new Intent(Intent.ACTION_SEND);
+                sharingIntent.setType("image/*");
+                sharingIntent.putExtra(Intent.EXTRA_STREAM, currentPhotoPath);
+                startActivity(Intent.createChooser(sharingIntent, "Share Image Using"));
             }
         });
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -114,6 +132,15 @@ public class MainActivity extends AppCompatActivity
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
+
+
+        btnChoose = (Button) findViewById(R.id.btnChoose);
+        btnUpload = (Button) findViewById(R.id.btnUpload);
+        imageView = (ImageView) findViewById(R.id.imgView);
+
+
+        storage = FirebaseStorage.getInstance();
+        storageReference = storage.getReference();
 
 
         mStorageRef = FirebaseStorage.getInstance().getReference();
@@ -139,6 +166,62 @@ public class MainActivity extends AppCompatActivity
 
 
     }
+
+    private void chooseImage()
+    {
+        //Create an Intent with action as ACTION_PICK
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        // Sets the type as image/*. This ensures only components of type image are selected
+        intent.setType("image/*");
+        //We pass an extra array with the accepted mime types. This will ensure only components with these MIME types as targeted.
+        String[] mimeTypes = {"image/jpeg", "image/png"};
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+        // Launching the Intent
+        startActivityForResult(intent, PICK_IMAGE_REQUEST);
+    }
+
+    private void uploadImage()
+    {
+
+        if (filePath != null)
+        {
+            final ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setTitle("Uploading...");
+            progressDialog.show();
+
+            StorageReference ref = storageReference.child("images/" + UUID.randomUUID().toString());
+            ref.putFile(filePath)
+                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>()
+                    {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot)
+                        {
+                            progressDialog.dismiss();
+                            Toast.makeText(MainActivity.this, "Uploaded", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener()
+                    {
+                        @Override
+                        public void onFailure(@NonNull Exception e)
+                        {
+                            progressDialog.dismiss();
+                            Toast.makeText(MainActivity.this, "Failed " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>()
+                    {
+                        @Override
+                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot)
+                        {
+                            double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot
+                                    .getTotalByteCount());
+                            progressDialog.setMessage("Uploaded " + (int) progress + "%");
+                        }
+                    });
+        }
+    }
+
 
     public void logOut(MenuItem item)
     {
@@ -279,7 +362,21 @@ public class MainActivity extends AppCompatActivity
                 // ...
             }
         }
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK
+                && data != null && data.getData() != null)
+        {
+            filePath = data.getData();
+            try
+            {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath);
+                imageView.setImageBitmap(bitmap);
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
+
 
     private void displayProgressDialog()
     {
@@ -415,4 +512,21 @@ public class MainActivity extends AppCompatActivity
         sharingIntent.putExtra(Intent.EXTRA_STREAM, currentPhotoPath);
         startActivity(Intent.createChooser(sharingIntent, "Share Image Using"));
     }
+
+
+    public void chooseImage(View view)
+    {
+        chooseImage();
+        imageView.setVisibility(View.VISIBLE);
+    }
+
+    public void uploadImg(View view)
+    {
+        uploadImage();
+
+        imageView.setVisibility(View.GONE);
+
+    }
+
+
 }
