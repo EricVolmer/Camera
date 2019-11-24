@@ -20,4 +20,8 @@
     <string name="existingimage">ExistingImage</string>
     <string name="communicate">Communicate</string>
     <string name="send_to">sendTo</string>
+    <string name="chosen_image">Chosen Image</string>
+    <string name="upload">Upload</string>
+    <string name="choose">Choose</string>
+    <string name="display_taken_image">Display taken Image</string>
 </resources>

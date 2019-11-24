@@ -1,7 +1,6 @@
 package com.example.cameraapp;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -22,7 +21,6 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -72,20 +70,16 @@ public class MainActivity extends AppCompatActivity
 
     private AppBarConfiguration mAppBarConfiguration;
     private static final int REQUEST_IMAGE_CAPTURE = 1;
-    private ImageView imageView23;
-    private StorageReference mStorageRef;
     private static final String TAG = "MainActivity";
     private ProgressDialog pDialog;
     private static final int RC_SIGN_IN = 9001;
     FirebaseStorage storage;
     StorageReference storageReference;
-
-    private Button btnChoose, btnUpload;
+    Button btnChoose, btnUpload;
     ImageView imageView;
-
     private Uri filePath;
-
     private final int PICK_IMAGE_REQUEST = 71;
+    String currentPhotoPath = null;
 
 
     // Firebase Auth Object.
@@ -99,8 +93,6 @@ public class MainActivity extends AppCompatActivity
 
     // Google Sign In button .
     com.google.android.gms.common.SignInButton signInButton;
-    private boolean uriToImage;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -133,23 +125,23 @@ public class MainActivity extends AppCompatActivity
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
 
-
-        btnChoose = (Button) findViewById(R.id.btnChoose);
-        btnUpload = (Button) findViewById(R.id.btnUpload);
-        imageView = (ImageView) findViewById(R.id.imgView);
+        //Selecting image from the internal storage
+        btnChoose = findViewById(R.id.btnChoose);
+        //Uploading selected image to Firebase database
+        btnUpload = findViewById(R.id.btnUpload);
+        //Displaying the selected image on main screen
+        imageView = findViewById(R.id.imgView);
+        //Possibility to log into google account
+        signInButton = findViewById(R.id.sign_in_button);
+        //Sign out from the account
+        SignOutButton = findViewById(R.id.logout);
 
 
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
 
-
-        mStorageRef = FirebaseStorage.getInstance().getReference();
-
         pDialog = new ProgressDialog(MainActivity.this);
 
-        signInButton = findViewById(R.id.sign_in_button);
-
-        SignOutButton = findViewById(R.id.logout);
 
         // Getting Firebase Auth Instance into firebaseAuth object.
         firebaseAuth = FirebaseAuth.getInstance();
@@ -163,9 +155,187 @@ public class MainActivity extends AppCompatActivity
                 .build();
 
         GoogleSignInClient = GoogleSignIn.getClient(this, gso);
+    }
 
+    //Permissions to use phone internal camera
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    private static final String[] PERMISSIONS =
+            {
+                    Manifest.permission.CAMERA
+            };
+
+    private static final int REQUEST_PERMISSIONS = 34;
+    // this is a code identifier
+
+    private static final int PERMISSIONS_COUNT = 1;
+
+    private boolean arePermissionsDenied()
+    {
+        for (int i = 0; i < PERMISSIONS_COUNT; i++)
+        {
+            if (checkSelfPermission(PERMISSIONS[i]) != PackageManager.PERMISSION_GRANTED)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
+    {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_PERMISSIONS && grantResults.length > 0)
+        {
+            if (arePermissionsDenied())
+            {
+                ((ActivityManager) (Objects.requireNonNull(this.getSystemService(ACTIVITY_SERVICE)))).clearApplicationUserData();
+                recreate();
+            } else
+            {
+                onResume();
+            }
+        }
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && arePermissionsDenied())
+        //This checks if the current android version is higher than 6.0
+        // if it is true then it will ask permission
+        {
+            requestPermissions(PERMISSIONS, REQUEST_PERMISSIONS);
+        }
 
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //Navigation bar
+
+    @Override
+    public boolean onSupportNavigateUp()
+    {
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        return NavigationUI.navigateUp(navController, mAppBarConfiguration)
+                || super.onSupportNavigateUp();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Logging in and logging out with google account
+
+    public void firebaseAuthWithGoogle(final GoogleSignInAccount acct)
+    {
+        displayProgressDialog();
+        Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
+
+        final AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+        firebaseAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>()
+                {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task)
+                    {
+                        if (task.isSuccessful())
+                        {
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d(TAG, "signInWithCredential:success");
+                            Toast.makeText(getApplicationContext(), "Welcome back: " + acct.getDisplayName(), Toast.LENGTH_SHORT).show();
+
+                            FirebaseUser user = firebaseAuth.getCurrentUser();
+                            updateUI(user);
+                        } else
+                        {
+                            // If sign in fails, display a message to the user.
+                            Log.w(TAG, "signInWithCredential:failure", task.getException());
+                            Toast.makeText(getApplicationContext(), "Login Failed: ", Toast.LENGTH_SHORT).show();
+                        }
+
+                        hideProgressDialog();
+                    }
+
+                });
+    }
+
+    // Changing the details on top of navigation bar(Picture, name and email)
+
+    private void updateUI(FirebaseUser user)
+    {
+        hideProgressDialog();
+
+        TextView displayName = findViewById(R.id.userName);
+        ImageView profileImage = findViewById(R.id.imageView);
+        TextView displayEmail = findViewById(R.id.email);
+
+        if (user != null)
+        {
+            displayName.setText(user.getDisplayName());
+            displayName.setVisibility(View.VISIBLE);
+            displayEmail.setText(user.getEmail());
+            displayEmail.setVisibility(View.VISIBLE);
+            // Loading profile image
+            Uri profilePicUrl = user.getPhotoUrl();
+            if (profilePicUrl != null)
+            {
+                Glide.with(this).load(profilePicUrl)
+                        .into(profileImage);
+            }
+            profileImage.setVisibility(View.VISIBLE);
+
+        } else
+        {
+            displayName.setVisibility(View.GONE);
+            profileImage.setVisibility(View.GONE);
+            displayEmail.setVisibility(View.GONE);
+        }
+    }
+
+    public void UserSignInMethod()
+    {
+
+        // Passing Google Api Client into Intent.
+        Intent signInIntent = GoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    public void logIn(MenuItem item)
+    {
+        UserSignInMethod();
+    }
+
+    public void UserSignOutFunction()
+    {
+        // Firebase sign out
+        firebaseAuth.signOut();
+
+        // Google sign out
+        GoogleSignInClient.signOut().addOnCompleteListener(this,
+                new OnCompleteListener<Void>()
+                {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task)
+                    {
+                        Toast.makeText(getApplicationContext(), "Logged out ", Toast.LENGTH_SHORT).show();
+                        updateUI(null);
+                    }
+                });
+    }
+
+    public void logOut(MenuItem item)
+    {
+        UserSignOutFunction();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //Selecting Image from storage
 
     private void chooseImage()
     {
@@ -179,6 +349,14 @@ public class MainActivity extends AppCompatActivity
         // Launching the Intent
         startActivityForResult(intent, PICK_IMAGE_REQUEST);
     }
+
+    public void chooseImage(View view)
+    {
+        chooseImage();
+        imageView.setVisibility(View.VISIBLE);
+    }
+
+    //Uploading image to firebase database
 
     private void uploadImage()
     {
@@ -222,93 +400,16 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-
-    public void logOut(MenuItem item)
+    public void uploadImg(View view)
     {
-        UserSignOutFunction();
-    }
+        uploadImage();
 
-    public void logIn(MenuItem item)
-    {
-        UserSignInMethod();
-    }
-
-    public void UserSignInMethod()
-    {
-
-        // Passing Google Api Client into Intent.
-        Intent signInIntent = GoogleSignInClient.getSignInIntent();
-        startActivityForResult(signInIntent, RC_SIGN_IN);
-    }
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    private static final String[] PERMISSIONS =
-            {
-                    Manifest.permission.CAMERA
-            };
-
-    private static final int REQUEST_PERMISSIONS = 34;
-    // this is a code identifier
-
-    private static final int PERMISSIONS_COUNT = 1;
-
-    private boolean arePermissionsDenied()
-    {
-        for (int i = 0; i < PERMISSIONS_COUNT; i++)
-        {
-            if (checkSelfPermission(PERMISSIONS[i]) != PackageManager.PERMISSION_GRANTED)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults)
-    {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_PERMISSIONS && grantResults.length > 0)
-        {
-            if (arePermissionsDenied())
-            {
-                ((ActivityManager) (Objects.requireNonNull(this.getSystemService(ACTIVITY_SERVICE)))).clearApplicationUserData();
-                recreate();
-            } else
-            {
-                onResume();
-            }
-        }
-    }
-
-    @Override
-    protected void onResume()
-    {
-        super.onResume();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && arePermissionsDenied())
-        //This checks if the current android version is higher than 6.0
-        // if it is true then it will ask permission
-        {
-            requestPermissions(PERMISSIONS, REQUEST_PERMISSIONS);
-        }
+        imageView.setVisibility(View.GONE);
 
     }
 
-    @Override
-    public boolean onSupportNavigateUp()
-    {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-        return NavigationUI.navigateUp(navController, mAppBarConfiguration)
-                || super.onSupportNavigateUp();
-    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //Taking picture with phone internal camera
 
     public void takePicture(MenuItem item)
     {
@@ -335,6 +436,65 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
+
+    //Creating the image file to the local storage
+
+    private File getImageFile() throws IOException
+    {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",   /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        currentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+
+    //Displaying picture after taken a picture
+
+    public void displayImage(View view)
+    {
+        Intent intent = new Intent(this, DisplayImage.class);
+        intent.putExtra("image_path", currentPhotoPath);
+        startActivity(intent);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //Progress bar
+
+    private void displayProgressDialog()
+    {
+        pDialog.setMessage("Logging In.. Please wait...");
+        pDialog.setIndeterminate(false);
+        pDialog.setCancelable(false);
+        pDialog.show();
+
+    }
+
+    private void hideProgressDialog()
+    {
+        pDialog.dismiss();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Sharing the picture
+
+    public void share(MenuItem item)
+    {
+        Intent sharingIntent = new Intent(Intent.ACTION_SEND);
+        sharingIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        sharingIntent.setType("image/*");
+        sharingIntent.putExtra(Intent.EXTRA_STREAM, currentPhotoPath);
+        startActivity(Intent.createChooser(sharingIntent, "Share Image Using"));
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
@@ -376,157 +536,4 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
-
-
-    private void displayProgressDialog()
-    {
-        pDialog.setMessage("Logging In.. Please wait...");
-        pDialog.setIndeterminate(false);
-        pDialog.setCancelable(false);
-        pDialog.show();
-
-    }
-
-    public void firebaseAuthWithGoogle(final GoogleSignInAccount acct)
-    {
-        displayProgressDialog();
-        Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
-
-        final AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
-        firebaseAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>()
-                {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task)
-                    {
-                        if (task.isSuccessful())
-                        {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "signInWithCredential:success");
-                            Toast.makeText(getApplicationContext(), "Welcome back: " + acct.getDisplayName(), Toast.LENGTH_SHORT).show();
-
-                            FirebaseUser user = firebaseAuth.getCurrentUser();
-                            updateUI(user);
-                        } else
-                        {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "signInWithCredential:failure", task.getException());
-                            Toast.makeText(getApplicationContext(), "Login Failed: ", Toast.LENGTH_SHORT).show();
-                        }
-
-                        hideProgressDialog();
-                    }
-
-                });
-    }
-
-    private void updateUI(FirebaseUser user)
-    {
-        hideProgressDialog();
-
-        TextView displayName = findViewById(R.id.userName);
-        ImageView profileImage = findViewById(R.id.imageView);
-        TextView displayEmail = findViewById(R.id.email);
-
-        if (user != null)
-        {
-            displayName.setText(user.getDisplayName());
-            displayName.setVisibility(View.VISIBLE);
-            displayEmail.setText(user.getEmail());
-            displayEmail.setVisibility(View.VISIBLE);
-            // Loading profile image
-            Uri profilePicUrl = user.getPhotoUrl();
-            if (profilePicUrl != null)
-            {
-                Glide.with(this).load(profilePicUrl)
-                        .into(profileImage);
-            }
-            profileImage.setVisibility(View.VISIBLE);
-
-        } else
-        {
-            displayName.setVisibility(View.GONE);
-            profileImage.setVisibility(View.GONE);
-            displayEmail.setVisibility(View.GONE);
-        }
-    }
-
-    private void hideProgressDialog()
-    {
-        pDialog.dismiss();
-    }
-
-
-    public void UserSignOutFunction()
-    {
-        // Firebase sign out
-        firebaseAuth.signOut();
-
-        // Google sign out
-        GoogleSignInClient.signOut().addOnCompleteListener(this,
-                new OnCompleteListener<Void>()
-                {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task)
-                    {
-                        Toast.makeText(getApplicationContext(), "Logged out ", Toast.LENGTH_SHORT).show();
-                        updateUI(null);
-                    }
-                });
-    }
-
-    String currentPhotoPath = null;
-
-    private File getImageFile() throws IOException
-    {
-        // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
-        );
-
-        // Save a file: path for use with ACTION_VIEW intents
-        currentPhotoPath = image.getAbsolutePath();
-        return image;
-    }
-
-
-    public void displayImage(View view)
-    {
-        Intent intent = new Intent(this, DisplayImage.class);
-        intent.putExtra("image_path", currentPhotoPath);
-        startActivity(intent);
-    }
-
-
-    public void share(MenuItem item)
-    {
-        Intent sharingIntent = new Intent(Intent.ACTION_SEND);
-        sharingIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-        sharingIntent.setType("image/*");
-        sharingIntent.putExtra(Intent.EXTRA_STREAM, currentPhotoPath);
-        startActivity(Intent.createChooser(sharingIntent, "Share Image Using"));
-    }
-
-
-    public void chooseImage(View view)
-    {
-        chooseImage();
-        imageView.setVisibility(View.VISIBLE);
-    }
-
-    public void uploadImg(View view)
-    {
-        uploadImage();
-
-        imageView.setVisibility(View.GONE);
-
-    }
-
-
 }

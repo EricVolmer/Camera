@@ -11,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.cameraapp.ui.gallery.GalleryFragment;
 
 import java.io.File;
@@ -51,7 +50,6 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageV
 
         //  Glide.with(this.context).load(urls.get(position)).into(holder.getImage());
 
-
     }
 
     @Override
@@ -68,11 +66,8 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ImageV
         ImageViewHolder(View itemView)
         {
             super(itemView);
-
-
             Album = itemView.findViewById(R.id.album);
             AlbumTitle = itemView.findViewById(R.id.album_title);
-
 
         }
 
