@@ -24,4 +24,5 @@
     <string name="upload">Upload</string>
     <string name="choose">Choose</string>
     <string name="display_taken_image">Display taken Image</string>
+    <string name="chose">chose</string>
 </resources>

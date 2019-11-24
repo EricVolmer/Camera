@@ -18,7 +18,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:onClick="chooseImage"
-            android:text="@string/choose" />
+            android:text="@string/chose" />
 
         <Button
             android:id="@+id/btnUpload"
